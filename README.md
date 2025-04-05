@@ -138,3 +138,12 @@ uart-init(UART0)
 for(;;)
     code = uart-receive(UART0)
     uart-send(uart0, code)
+
+
+
+
+
+STEP 3 
+
+Lock Free Ring
+- cohérence mémoire qui ordonne les write
