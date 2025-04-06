@@ -77,6 +77,10 @@ void vic_setup_irqs() {
  * Enables the given interrupt at the VIC level.
  */
 void vic_enable_irq(uint32_t irq, void (*callback)(uint32_t, void*), void *cookie) {
+  if (irq > NIRQS) {
+    panic();
+  }
+  
   handlers[irq].callback = callback;
   handlers[irq].cookie = cookie;
   // void mmio_write32(void* bar, uint32_t offset, uint32_t value) {
@@ -88,6 +92,9 @@ void vic_enable_irq(uint32_t irq, void (*callback)(uint32_t, void*), void *cooki
  * Disables the given interrupt at the VIC level.
  */
 void vic_disable_irq(uint32_t irq) {
+  if (irq > NIRQS) {
+    panic();
+  }
   handlers[irq].callback = 0;
   handlers[irq].cookie = 0;
   mmio_write32((void *)VIC_BASE_ADDR, VICINTCLEAR, (1 << irq));
