@@ -1,12 +1,13 @@
-# iot
+# IOT
 
 # Commandes apprises
 ln -s /usr/bin/gdb-multiarch /usr/bin/arm-none-eabi-gdb
-but : lien symbolique entre deux binaires.
+--- lien symbolique entre deux binaires.
 
 
 
 # STEP1
+
 But : Voir les caractères affichés sur notre console virtuel émulé par QEMU.
 
 Compréhension : 
@@ -21,46 +22,50 @@ en utilisant les flag, nous pouvons déduire que si le fifo du receiver est empt
 Code : en se basant sur les explications précédentes et sur la documentation ARM926EJ et PL011. J'ai pu débuter la rédaction de mon code. Il a fallut d'abord définir l'adresse de l'UART, et ensuite ajouter les offsets pour utiliser le DR et les FR.
 Appliquer ce que j'ai déduit précédemment sur les méthodes uart_send et uart_receive.
 
-# UART
+## UART
 correspond à récepteur/émetteur asynchrone universel et définit un protocole, ou un ensemble de règles, 
 dédié à l'échange de données série entre deux appareils.
 
 
-# kernel.ld 
+## Makefile
 
-## startup.s
-## exception.s
-
-# Makefile
 addprexix : 2 paramètres, 
 - folder (string)
 - serie de nom séparé par des espaces (nom1 nomX)
 Pour chaque : folder/nom1 
 
-etapes :
-1. configurer les variables
-2. non configurable, les options QEMU
-Versatile boards : 
-3. 
+Pour build éxécuter la commande suivante à la racine du projet : 
+```
+make
+```
 
-
-[text](https://www.gnu.org/software/make/manual/make.html)
-
-
-
-
+Il est ensuite possible de lancer le projet avec : 
+```
+make run
+```
 
 
 
-# QEMU
+## QEMU
 Démarre son execution après avoir charger le fichier ELF. 
 QEMU fournit l'état 1 (state1).
 
+## SOURCES
 
-
-
+[text](https://www.gnu.org/software/make/manual/make.html)
 
 # STEP2 
+## Définition
+
+* VIC : Vecteur d'exception en mémoire (CH2- diapo 15) 
+* LR : link register --> l'endroit où l'interruption s'éxecute.
+* SP : Stack register, sert à indiquer l'emplacement du dernier élément placé sur la pile
+* PC : compteur de programme, contient l'adresse de la prochaine instruction à exécuter
+* IR : registre d'instructions, contient l'instruction codée
+* ^ : retour
+* ! : valeur du registre SP, derniere valeur dans registre
+* IRQ : Interrupt request 
+* OFFSET : désigne une adresse de manière relative. C'est une valeur entière représentant le déplacement en mémoire nécessaire, par rapport à une adresse de référence, pour atteindre une autre adresse.
 
 
 Interruption : 
@@ -70,7 +75,7 @@ Les trois à configurer
     CPU : s'il est endormi, réveil et appel la fonction demandé
     instruction halt : permet d'endormir le processeur
 
-PIC definition : un chipset qui gère les interruptions matérielles provenant des périphériques et les envoie au processeur de manière ordonnée. Il permet au CPU de gérer plusieurs sources d'interruptions en multiplexant et en priorisant les requêtes.
+* PIC : un chipset qui gère les interruptions matérielles provenant des périphériques et les envoie au processeur de manière ordonnée. Il permet au CPU de gérer plusieurs sources d'interruptions en multiplexant et en priorisant les requêtes.
 Le PIC agit donc comme un gestionnaire centralisé, qui :
 
     - Reçoit les requêtes d’interruptions des périphériques.
@@ -79,10 +84,7 @@ Le PIC agit donc comme un gestionnaire centralisé, qui :
     - Envoie l’interruption la plus prioritaire au CPU.
     - Attend un acquittement du CPU avant d’envoyer la suivante.
 
-
-Fonctionnement d’un PIC
-
-Un PIC classique (comme le 8259A, utilisé historiquement dans les PC) est configuré et contrôlé via des registres mémoire (MMIO) ou des ports d’E/S (PIO).
+Fonctionnement d’un PIC : Un PIC classique (comme le 8259A, utilisé historiquement dans les PC) est configuré et contrôlé via des registres mémoire (MMIO) ou des ports d’E/S (PIO).
 
 Structure d’un PIC
 
@@ -113,37 +115,23 @@ Si je suis en train de faire un calcul et que j'utilise un registre, si je déci
 si je ne l'ai pas store. 
 
 
+## isr.h
+Lors de cette étape il a fallut déterminer le nombre maximal d'interruptions
+gérées par le VIC. Cela me permettant d'éviter d’en définir plus que ce que le VIC peut en gérer. Egalement de savoir combien peuvent être gérées en même temps.
+Ensuite il fallait rechercher l'interruption relié aux UART 0, 1 et 2. Ainsi que les interruptions associés aux timers.
+Et calculer pour chacun d'entre eux les masques associées. 
 
 
-VIC : Vecteur d'exception en mémoire (CH2- diapo 15) 
-LR : link register --> l'endroit où l'interruption s'éxecute.
-SP : Stack register, sert à indiquer l'emplacement du dernier élément placé sur la pile
-PC : compteur de programme, contient l'adresse de la prochaine instruction à exécuter
-IR : registre d'instructions, contient l'instruction codée
-^ : retour
-! : valeur du registre SP, derniere valeur dans registre
-IRQ : Interrupt request 
-OFFSET : désigne une adresse de manière relative. C'est une valeur entière représentant le déplacement en mémoire nécessaire, par rapport à une adresse de référence, pour atteindre une autre adresse.
+TODO : ajouter schema
 
-
-
-
-
-- soft 
-
-
-
-CODE : 
-uart-init(UART0)
-for(;;)
-    code = uart-receive(UART0)
-    uart-send(uart0, code)
+## isr.c
 
 
 
 
 
-STEP 3 
+
+# STEP 3 
 
 Lock Free Ring
 - cohérence mémoire qui ordonne les write
