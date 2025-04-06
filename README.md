@@ -144,7 +144,7 @@ TODO : ajouter schema
 * VICINTCLEAR : Permet de désactiver une interruption, 1 dans un bit pour désactiver l’interruption correspondante.
 
 
-
+Gestion des erreurs !!!
 
 
 # STEP 3 
