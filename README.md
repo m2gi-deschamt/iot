@@ -58,6 +58,7 @@ QEMU fournit l'état 1 (state1).
 ## Définition
 
 * VIC : Vecteur d'exception en mémoire (CH2- diapo 15) 
+* FIQ (Fast Interrupt Requests)
 * LR : link register --> l'endroit où l'interruption s'éxecute.
 * SP : Stack register, sert à indiquer l'emplacement du dernier élément placé sur la pile
 * PC : compteur de programme, contient l'adresse de la prochaine instruction à exécuter
@@ -126,6 +127,21 @@ TODO : ajouter schema
 
 ## isr.c
 
+
+
+
+
+* VICIRQSTATUS/VICFIQSTATUS : Donne l’état des interruptions IRQ actives après filtrage (masquage). Chaque bit correspond à une interruption (bit 0 = interruption 0, bit 1 = interruption 1, etc). Si un bit est à 1, ça veut dire que cette interruption est active et envoyée comme IRQ au processeur.
+
+* VICRAWSTATUS : Donne l’état brut des interruptions (sans masque). Utile pour diagnostiquer si une interruption est levée, même si elle est désactivée par les registres de masque.
+
+* VICINTSELECT : Sert à choisir si une interruption est de type IRQ (0) ou FIQ (1).
+    - Chaque bit = 1 ➜ FIQ
+    - Chaque bit = 0 ➜ IRQ
+
+* VICINTENABLE : Permet d’activer une interruption.En écrivant un 1 dans un bit, cela actives l’interruption correspondante.
+
+* VICINTCLEAR : Permet de désactiver une interruption, 1 dans un bit pour désactiver l’interruption correspondante.
 
 
 
