@@ -43,12 +43,14 @@ void uarts_init() {
 
 void uart_enable(uint32_t uartno) {
   struct uart*uart = &uarts[uartno];
+  mmio_write32(uart->bar, UART_IMSC, *((uint16_t*)(uart->bar+UART_IMSC))|(1 << MASK_UART_RXIM) | (MASK_UART_TXIM));
   // nothing to do here, as long as
   // we do not rely on interrupts
 }
 
 void uart_disable(uint32_t uartno) {
   struct uart*uart = &uarts[uartno];
+  mmio_write32(uart->bar, UART_IMSC, *((uint16_t*)(uart->bar+UART_IMSC))&~(1 << MASK_UART_RXIM) &~ (MASK_UART_TXIM));
   // nothing to do here, as long as
   // we do not rely on interrupts
 }

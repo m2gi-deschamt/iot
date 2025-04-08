@@ -13,6 +13,7 @@
  */
 #include "main.h"
 #include "uart.h"
+#include "isr.h"
 
 extern uint32_t irq_stack_top;
 extern uint32_t stack_top;
@@ -23,12 +24,20 @@ void check_stacks() {
   addr = &stack_top;
   if (addr >= memsize)
     panic();
-/*
+
   addr = &irq_stack_top;
   if (addr >= memsize)
     panic();
-*/
 }
+
+
+void receive(uint32_t irq, void *cookie) {
+  char c;
+  uart_receive(UART0, &c);
+  while(c) uart_receive(0, &c);
+}
+
+
 
 /**
  * This is the C entry point,
@@ -40,9 +49,12 @@ void _start(void) {
   check_stacks();
   uarts_init();
   uart_enable(UART0);
+  vic_setup_irqs();
+  vic_enable_irq(UART0_IRQ, receive, NULL);
+  core_enable_irqs();
+  
   for (;;) {
-    uart_receive(UART0, &c);
-    uart_send(UART0, c);
+    core_halt;
   }
 }
 

@@ -83,9 +83,7 @@ void vic_enable_irq(uint32_t irq, void (*callback)(uint32_t, void*), void *cooki
   
   handlers[irq].callback = callback;
   handlers[irq].cookie = cookie;
-  // void mmio_write32(void* bar, uint32_t offset, uint32_t value) {
-  mmio_write32((void *)VIC_BASE_ADDR, VICINTENABLE, (1 << irq));
-  
+  mmio_write32((void *)VIC_BASE_ADDR, VICINTENABLE, *((uint32_t*)(VIC_BASE_ADDR + VICINTENABLE))|(1 << irq));
 }
 
 /*

@@ -15,6 +15,12 @@
 #ifndef UART_MMIO_H_
 #define UART_MMIO_H_
 
+
+#define UART_IMSC 0x038
+#define MASK_UART_RXIM 4
+#define MASK_UART_TXIM 5
+
+
 /**
  * To fill this header file,
  * look at the document describing the Versatile Application Board:
