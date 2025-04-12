@@ -57,13 +57,13 @@
 #define TIMER3_IRQ_MASK (1 << TIMER3_IRQ)
 
 #define TIMER2_IRQ 5
-#define TIMER2_IRQ_MASK (1 << TIMER2_IRQ)
+#define TIMER2_IRQ_MASK (1 << TIMER3_IRQ)
 
 #define TIMER1_IRQ 4
-#define TIMER1_IRQ_MASK (1 << TIMER1_IRQ)
+#define TIMER1_IRQ_MASK (1 << TIMER3_IRQ)
 
 #define TIMER0_IRQ 4
-#define TIMER0_IRQ_MASK (1 << TIMER0_IRQ)
+#define TIMER0_IRQ_MASK (1 << TIMER3_IRQ)
 
 /*
  * Core interrupt-related behavior:

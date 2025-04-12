@@ -67,18 +67,13 @@ void core_halt() {
  * sides.
  */
 void vic_setup_irqs() {
-    _irqs_setup;
+  _irqs_setup();
 }
 
 /*
  * Enables the given interrupt at the VIC level.
  */
 void vic_enable_irq(uint32_t irq, void (*callback)(uint32_t, void*), void *cookie) {
-/*
-  if (irq > NIRQS) {
-    panic();
-  }
-*/
   *((uint32_t*)(VIC_BASE_ADDR+VICINTENABLE)) = *((uint32_t*)(VIC_BASE_ADDR+VICINTENABLE)) | (1 << irq);
   handlers[irq].callback = callback;
   handlers[irq].cookie = cookie;
@@ -88,10 +83,6 @@ void vic_enable_irq(uint32_t irq, void (*callback)(uint32_t, void*), void *cooki
  * Disables the given interrupt at the VIC level.
  */
 void vic_disable_irq(uint32_t irq) {
-  /*
-  if (irq > NIRQS) {
-    panic();
-  }*/
   struct handler*handler = &handlers[irq];
   handler->callback = 0;
   handler->cookie = 0;
