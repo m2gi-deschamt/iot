@@ -37,8 +37,6 @@ void receive(uint32_t irq, void *cookie) {
   while(c) uart_receive(0, &c);
 }
 
-
-
 /**
  * This is the C entry point,
  * upcalled once the hardware has been setup properly

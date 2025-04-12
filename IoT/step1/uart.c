@@ -43,37 +43,39 @@ void uarts_init() {
 
 void uart_enable(uint32_t uartno) {
   struct uart*uart = &uarts[uartno];
-  mmio_write32(uart->bar, UART_IMSC, *((uint16_t*)(uart->bar+UART_IMSC))|(1 << MASK_UART_RXIM) | (MASK_UART_TXIM));
+  mmio_write32(uart->bar, UART_IMSC, *((uint16_t*)(uart->bar+UART_IMSC))|(1 << MASK_UART_RXIM) | (1 << MASK_UART_TXIM));
   // nothing to do here, as long as
   // we do not rely on interrupts
 }
 
 void uart_disable(uint32_t uartno) {
   struct uart*uart = &uarts[uartno];
-  mmio_write32(uart->bar, UART_IMSC, *((uint16_t*)(uart->bar+UART_IMSC))&~(1 << MASK_UART_RXIM) &~ (MASK_UART_TXIM));
+  mmio_write32(uart->bar, UART_IMSC, *((uint16_t*)(uart->bar+UART_IMSC))&~(1 << MASK_UART_RXIM) &~ (1 << MASK_UART_TXIM));
   // nothing to do here, as long as
   // we do not rely on interrupts
 }
 
 void uart_receive(uint8_t uartno, char *pt) {
-  struct uart *uart = &uarts[uartno];
-
-  // Attendre qu'un caractère soit disponible dans le FIFO de réception
-  while (mmio_read16(uart->bar, UART_FR) & UART_FR_RXFE) { }
-
-  // Lire le caractère reçu
-  *pt = (char) mmio_read16(uart->bar, UART_DR);
+  struct uart*uart = &uarts[uartno];
+  if (mmio_read8(uart->bar, UART_FR) & UART_FR_RXFE) {
+  *pt = 0;
+  return;
+  }
+  *pt = mmio_read8(uart->bar, UART_DR);
+  *pt = *(char*)(uart->bar + UART_DR);
 }
-
 
 /**
  * Sends a character through the given uart, this is a blocking call
  * until the character has been sent.
  */
 void uart_send(uint8_t uartno, char s) {
-  struct uart* uart = &uarts[uartno];
-  while (mmio_read16(uart->bar, UART_FR) & UART_FR_TXFF) { }
-  mmio_write16(uart->bar, UART_DR, s);
+  struct uart*uart = &uarts[uartno];
+  while ((mmio_read16(uart->bar,UART_FR) & UART_FR_RXFE)){
+    ;
+  }
+  mmio_write8(uart->bar, UART_DR, s);
+
 }
 
 /**

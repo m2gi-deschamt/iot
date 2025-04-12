@@ -146,6 +146,17 @@ TODO : ajouter schema
 
 Gestion des erreurs !!!
 
+Dans notre situation : 
+x /w 0x101F1038 --> affiche l'hexa pour uart_enable dont les bits 0 (uarts_init),4,5 doivent être à 1
+x /w 0x10140010 --> affiche l'hexa pour vic_enable_irq dont le 12 eme bits doit être à 1
+
+- qemu-system-arm -M versatileab   -cpu cortex-a8 -m "32K"   -nographic -serial mon:stdio -device loader,file=build/kernel.elf -gdb tcp::1234 -S
+- arm-none-eabi-gdb kernel.elf
+- target rem:1234
+
+
+
+
 
 # STEP 3 
 
