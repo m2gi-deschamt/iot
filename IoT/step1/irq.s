@@ -100,5 +100,3 @@ _irqs_disable:
     mov pc,lr
     .size   _irqs_disable, . - _irqs_disable
 	.endfunc
-
-

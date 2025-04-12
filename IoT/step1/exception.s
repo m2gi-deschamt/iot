@@ -47,10 +47,10 @@ irq_handler_addr: .word _isr_handler
 fiq_handler_addr: .word _fiq_handler
 
 _isr_handler:
-    sub lr, lr, #4
+    sub lr,lr,#4
     stmfd sp!, {r0-r12, lr}
     bl isr
-    ldmfd sp!, {r0-r12, pc}^
+    ldmfd sp!, {r0-r12, pc}^ 
 
 _unused_handler:
     b .  // unused interrupt occurred
@@ -77,4 +77,3 @@ _prefetch_abort_handler:
 */
 _data_abort_handler:
 	b .  // unexpected abort trap
-

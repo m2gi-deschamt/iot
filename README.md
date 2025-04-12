@@ -155,9 +155,6 @@ x /w 0x10140010 --> affiche l'hexa pour vic_enable_irq dont le 12 eme bits doit 
 - target rem:1234
 
 
-
-
-
 # STEP 3 
 
 Lock Free Ring

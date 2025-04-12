@@ -39,14 +39,14 @@ struct handler handlers[NIRQS];
  * Needs to interogate the VIC about the masked interrupt
  * status and call the corresponding handlers.
  */
-void isr() {
-  const uint32_t irqs = mmio_read32((void *)VIC_BASE_ADDR, VICIRQSTATUS);
-
-  for (uint32_t i = 0; i < NIRQS; i++) {
-    if (irqs & (1 << i) && handlers[i].callback){
-      handlers[i].callback(i, handlers[i].cookie);
-    }
+void isr () {
+  uint32_t irqs = *((uint32_t*)(VIC_BASE_ADDR+VICIRQSTATUS));
+  for (uint32_t i=0 ; i<32 ; i++) {
+    if (irqs & (1<<i)) {
+      handlers[i].callback (0, handlers[i].cookie);
+      *((uint32_t*)(VIC_BASE_ADDR+VICINTCLEAR)) = (1 << i);}
   }
+  return ;
 }
 
 void core_enable_irqs() {
@@ -67,9 +67,6 @@ void core_halt() {
  * sides.
  */
 void vic_setup_irqs() {
-    for (uint32_t i = 0; i < NIRQS; i++) {
-        vic_disable_irq(i);
-    }
     _irqs_setup;
 }
 
@@ -77,23 +74,26 @@ void vic_setup_irqs() {
  * Enables the given interrupt at the VIC level.
  */
 void vic_enable_irq(uint32_t irq, void (*callback)(uint32_t, void*), void *cookie) {
+/*
   if (irq > NIRQS) {
     panic();
   }
-  
+*/
+  *((uint32_t*)(VIC_BASE_ADDR+VICINTENABLE)) = *((uint32_t*)(VIC_BASE_ADDR+VICINTENABLE)) | (1 << irq);
   handlers[irq].callback = callback;
   handlers[irq].cookie = cookie;
-  mmio_write32((void *)VIC_BASE_ADDR, VICINTENABLE, *((uint32_t*)(VIC_BASE_ADDR + VICINTENABLE))|(1 << irq));
 }
 
 /*
  * Disables the given interrupt at the VIC level.
  */
 void vic_disable_irq(uint32_t irq) {
+  /*
   if (irq > NIRQS) {
     panic();
-  }
-  handlers[irq].callback = 0;
-  handlers[irq].cookie = 0;
-  mmio_write32((void *)VIC_BASE_ADDR, VICINTCLEAR, (1 << irq));
+  }*/
+  struct handler*handler = &handlers[irq];
+  handler->callback = 0;
+  handler->cookie = 0;
+  *((uint32_t*)(VIC_BASE_ADDR+VICINTCLEAR)) = (1 << irq);
 }

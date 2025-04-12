@@ -31,10 +31,11 @@ void check_stacks() {
 }
 
 
-void receive(uint32_t irq, void *cookie) {
+void test1(uint32_t noirq, void* cookie){
   char c;
-  uart_receive(UART0, &c);
-  while(c) uart_receive(0, &c);
+  uart_receive(0, &c);
+  uart_send(0, c);
+
 }
 
 /**
@@ -47,15 +48,16 @@ void _start(void) {
   check_stacks();
   uarts_init();
   uart_enable(UART0);
-  vic_setup_irqs();
-  vic_enable_irq(UART0_IRQ, receive, NULL);
-  core_enable_irqs();
-  
-  for (;;) {
-    core_halt;
-  }
-}
 
+  //uart_send_string(UART0, "\033[H\033[J >");
+
+  vic_setup_irqs();
+  vic_enable_irq(UART0_IRQ, test1, NULL);
+  core_enable_irqs();
+  for (;;) {
+    core_halt();
+    }
+}
 void panic() {
   for(;;)
     ;

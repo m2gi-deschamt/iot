@@ -23,8 +23,6 @@
 #define UART0 0
 #define UART1 1
 #define UART2 2
-#define UART_FR_RXFE (1 << 4)
-#define UART_FR_TXFF (1 << 5)
 
 /*
  * Receives a one-byte character, which is compatible
