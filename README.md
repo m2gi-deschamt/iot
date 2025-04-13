@@ -79,7 +79,7 @@ Le PIC agit donc comme un gestionnaire centralisé, qui :
     - Envoie l’interruption la plus prioritaire au CPU.
     - Attend un acquittement du CPU avant d’envoyer la suivante.
 
-### Fonctionnement PIC
+### Fonctionnement PIC
 Il est configuré et contrôlé via des registres mémoire (MMIO) ou des ports d’E/S (PIO).
 
 ### Structure PIC
@@ -87,7 +87,7 @@ Il est configuré et contrôlé via des registres mémoire (MMIO) ou des ports d
 Composé de lignes IRQ (Interrupt Request Lines) : chaque périphérique est connecté à une ligne IRQ différente. Il a un registre d’état pour stocker quelles interruptions sont actives. Un registre de masque permettant d’ignorer certaines interruptions. Un registre de priorité pour gérer l’ordre d’exécution.
 Et un mécanisme d’acquittement pour informer le PIC que l’interruption a été traitée.
 
-### Configuration via MMIO
+### Configuration via MMIO
 
 Comme tout contrôleur, le PIC est programmable via des registres mémoire (MMIO). On peut :
 * Activer/Désactiver certaines interruptions en configurant un registre de masque.

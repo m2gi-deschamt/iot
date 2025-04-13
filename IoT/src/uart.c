@@ -49,8 +49,11 @@
  
  void uart_receive(uint8_t uartno, char *pt) {
     struct uart*uart = &uarts[uartno];
-    while((*((uint16_t*)(uart->bar+UART_FR)) & (1 << 4)));
-    *pt = *((char*)(uart->bar+UART_DR));
+    if (mmio_read8(uart->bar, UART_FR) & (1 << 4)) {
+      *pt = '\0';
+      return;
+    }
+   *pt = *((char*)(uart->bar+UART_DR));
  }
  
  void uart_send(uint8_t uartno, char s) {
@@ -69,4 +72,3 @@
      s++;
    }
  }
- 
