@@ -1,61 +1,60 @@
-# IOT
+# PROJET IOT
 
-# Commandes apprises
+## Commandes utiles
+```bash
 ln -s /usr/bin/gdb-multiarch /usr/bin/arm-none-eabi-gdb
---- lien symbolique entre deux binaires.
+```
+Cette commande crée un lien symbolique (comme un raccourci) nommé arm-none-eabi-gdb qui pointe vers gdb-multiarch.
+Cela permet d’utiliser gdb sous le nom attendu par certains outils (notamment pour le débogage des projets ARM embarqués) sans avoir à modifier leur configuration.
 
+## Commande make disponible
+```bash
+make build
+```
+```bash
+make run
+```
+```bash
+make debug
+```
 
+## Etape 1 : Affichage de caractères via QEMU
 
-# STEP1
-
-But : Voir les caractères affichés sur notre console virtuel émulé par QEMU.
-
-Compréhension : 
-chaque UART alloue un espace de la mémoire. Lui permettant notamment d'y placer différentes informations parmi-elle : 
+### Compréhension
+ 
+Chaque UART alloue un espace mémoire. Lui permettant notamment d'y placer différentes informations, les choses utiles dans notre cas : 
 - DR (data register) qui correspond à un buffer dans lequel nos données de lecture et écriture vont transiter. 
 - FR (flag register) qui correspond à un tableau de bit, chaque bit nous donnera une information. Par exemple isEmpty ? 0 ou 1 selon son état.
 Chaque machine se servant de l'UART va posséder son propre fifo.
 
-Deduction :
-en utilisant les flag, nous pouvons déduire que si le fifo du receiver est empty, qu'il n'y a pas de valeur, il n'est pas possible de lire des données. A l'inverse si l'envoyeur est full, il n'est pas possible d'écrire.
+### Déduction
+en utilisant les flag, nous pouvons déduire : 
+* si le fifo du receiver est empty, qu'il n'y a pas de valeur, il n'est pas possible de lire des données. 
+* A l'inverse si l'envoyeur est full, il n'est pas possible d'écrire.
 
-Code : en se basant sur les explications précédentes et sur la documentation ARM926EJ et PL011. J'ai pu débuter la rédaction de mon code. Il a fallut d'abord définir l'adresse de l'UART, et ensuite ajouter les offsets pour utiliser le DR et les FR.
-Appliquer ce que j'ai déduit précédemment sur les méthodes uart_send et uart_receive.
+### Code
+Code : en se basant sur les explications précédentes et sur la documentation ARM926EJ et PL011. 
 
-## UART
-correspond à récepteur/émetteur asynchrone universel et définit un protocole, ou un ensemble de règles, 
-dédié à l'échange de données série entre deux appareils.
+Définir l'adresse de l'UART, et ajouter les offsets pour associé à DR et FR.
+Puis réaliser les méthodes uart_receive et uart_send. Ces deux fonctions permettent d’envoyer et recevoir des caractères via une interface UART.
 
+Pour send : 
+* uartno : numéro de l’UART (0, 1, 2...) à utiliser.
+* *pt : pointeur où sera stocké le caractère reçu.
+* UART_FR_RXFE : bit qui indique si le FIFO de réception est vide.
+* La fonction bloque tant qu’aucun caractère n’est disponible.
+* Dès qu’un caractère arrive, il est lu depuis le Data Register (UART_DR) et stocké dans *pt.
 
-## Makefile
-
-addprexix : 2 paramètres, 
-- folder (string)
-- serie de nom séparé par des espaces (nom1 nomX)
-Pour chaque : folder/nom1 
-
-Pour build éxécuter la commande suivante à la racine du projet : 
-```
-make
-```
-
-Il est ensuite possible de lancer le projet avec : 
-```
-make run
-```
+Pour receive :
+* s : caractère à envoyer.
+* UART_FR_TXFF : bit qui indique si le FIFO d’envoi est plein.
+* Tant que le FIFO est plein, la fonction attend (bloque).
+* Ensuite, elle écrit le caractère dans le Data Register (UART_DR), qui sera ensuite envoyé par l’UART.
 
 
+# Etape 2 : ajouter les interruptions 
 
-## QEMU
-Démarre son execution après avoir charger le fichier ELF. 
-QEMU fournit l'état 1 (state1).
-
-## SOURCES
-
-[text](https://www.gnu.org/software/make/manual/make.html)
-
-# STEP2 
-## Définition
+## Compréhension des notions
 
 * VIC : Vecteur d'exception en mémoire (CH2- diapo 15) 
 * FIQ (Fast Interrupt Requests)
@@ -69,14 +68,9 @@ QEMU fournit l'état 1 (state1).
 * OFFSET : désigne une adresse de manière relative. C'est une valeur entière représentant le déplacement en mémoire nécessaire, par rapport à une adresse de référence, pour atteindre une autre adresse.
 
 
-Interruption : 
-Les trois à configurer
-    Device : 
-    PIC/VIC (Programmable Interrupt Controller) : sonne chez le CPU, il a une mémoire, il faut dire au PIC d'arreter la sonnerie
-    CPU : s'il est endormi, réveil et appel la fonction demandé
-    instruction halt : permet d'endormir le processeur
-
-* PIC : un chipset qui gère les interruptions matérielles provenant des périphériques et les envoie au processeur de manière ordonnée. Il permet au CPU de gérer plusieurs sources d'interruptions en multiplexant et en priorisant les requêtes.
+## Interruption 
+    
+* PIC/VIC (Programmable Interrupt Controller) : sonne chez le CPU, il a une mémoire, il faut dire au PIC d'arreter la sonnerie. Il gère les interruptions matérielles provenant des périphériques et les envoie au processeur de manière ordonnée. Il permet au CPU de gérer plusieurs sources d'interruptions en multiplexant et en priorisant les requêtes.
 Le PIC agit donc comme un gestionnaire centralisé, qui :
 
     - Reçoit les requêtes d’interruptions des périphériques.
@@ -85,31 +79,20 @@ Le PIC agit donc comme un gestionnaire centralisé, qui :
     - Envoie l’interruption la plus prioritaire au CPU.
     - Attend un acquittement du CPU avant d’envoyer la suivante.
 
-Fonctionnement d’un PIC : Un PIC classique (comme le 8259A, utilisé historiquement dans les PC) est configuré et contrôlé via des registres mémoire (MMIO) ou des ports d’E/S (PIO).
+### Fonctionnement PIC
+Il est configuré et contrôlé via des registres mémoire (MMIO) ou des ports d’E/S (PIO).
 
-Structure d’un PIC
+### Structure PIC
 
-Un PIC dispose généralement :
+Composé de lignes IRQ (Interrupt Request Lines) : chaque périphérique est connecté à une ligne IRQ différente. Il a un registre d’état pour stocker quelles interruptions sont actives. Un registre de masque permettant d’ignorer certaines interruptions. Un registre de priorité pour gérer l’ordre d’exécution.
+Et un mécanisme d’acquittement pour informer le PIC que l’interruption a été traitée.
 
-    De lignes IRQ (Interrupt Request Lines) : chaque périphérique est connecté à une ligne IRQ différente.
-
-    D’un registre d’état pour stocker quelles interruptions sont actives.
-
-    D’un registre de masque permettant d’ignorer certaines interruptions.
-
-    D’un registre de priorité pour gérer l’ordre d’exécution.
-
-    D’un mécanisme d’acquittement pour informer le PIC que l’interruption a été traitée.
-
-2. Configuration via MMIO
+### Configuration via MMIO
 
 Comme tout contrôleur, le PIC est programmable via des registres mémoire (MMIO). On peut :
-
-    Activer/Désactiver certaines interruptions en configurant un registre de masque.
-
-    Définir les priorités en réarrangeant l’ordre des IRQ.
-
-    Envoyer une commande d’acquittement pour signaler qu’une interruption a été traitée.
+* Activer/Désactiver certaines interruptions en configurant un registre de masque.
+* Définir les priorités en réarrangeant l’ordre des IRQ.
+* Envoyer une commande d’acquittement pour signaler qu’une interruption a été traitée.
      
 
 Si je suis en train de faire un calcul et que j'utilise un registre, si je décide d'éxécuter une interruption, ce registre sera modifié à mon retour
@@ -122,14 +105,7 @@ gérées par le VIC. Cela me permettant d'éviter d’en définir plus que ce qu
 Ensuite il fallait rechercher l'interruption relié aux UART 0, 1 et 2. Ainsi que les interruptions associés aux timers.
 Et calculer pour chacun d'entre eux les masques associées. 
 
-
-TODO : ajouter schema
-
 ## isr.c
-
-
-
-
 
 * VICIRQSTATUS/VICFIQSTATUS : Donne l’état des interruptions IRQ actives après filtrage (masquage). Chaque bit correspond à une interruption (bit 0 = interruption 0, bit 1 = interruption 1, etc). Si un bit est à 1, ça veut dire que cette interruption est active et envoyée comme IRQ au processeur.
 
@@ -144,18 +120,32 @@ TODO : ajouter schema
 * VICINTCLEAR : Permet de désactiver une interruption, 1 dans un bit pour désactiver l’interruption correspondante.
 
 
-Gestion des erreurs !!!
+## Debug & erreurs
+```
+# affiche l'hexa pour uart_enable dont les bits 0 (uarts_init),4,5 doivent être à 1
+x /w 0x101F1038 
+# affiche l'hexa pour vic_enable_irq dont le 12 eme bits doit être à 1
+x /w 0x10140010 --> 
+```
 
-Dans notre situation : 
-x /w 0x101F1038 --> affiche l'hexa pour uart_enable dont les bits 0 (uarts_init),4,5 doivent être à 1
-x /w 0x10140010 --> affiche l'hexa pour vic_enable_irq dont le 12 eme bits doit être à 1
+Commande debug à connaitre :
+```
+# Première console
+make debug 
+```
+```
+# Seconde console dans le folder "build"
+arm-none-eabi-gdb kernel.elf
+target rem:1234
+```
 
-- qemu-system-arm -M versatileab   -cpu cortex-a8 -m "32K"   -nographic -serial mon:stdio -device loader,file=build/kernel.elf -gdb tcp::1234 -S
-- arm-none-eabi-gdb kernel.elf
-- target rem:1234
+# Etape 3 : Lock-Free Ring
 
-
-# STEP 3 
 
 Lock Free Ring
 - cohérence mémoire qui ordonne les write
+
+
+## SOURCES
+
+[text](https://www.gnu.org/software/make/manual/make.html)
